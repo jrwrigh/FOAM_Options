@@ -16,6 +16,7 @@ casepath = Path(
 # && icoFoam -case ~/OpenFOAM/u2berggeist-v1712/run/tutorials/incompressible/icoFoam/cavity/cavity`
 # in a new terminal
 def getErrorOut(casepath):
+    """ Get the STDERR from icoFoam """
     termout = subprocess.run(
         [
             '. ~/OpenFOAM/OpenFOAM-v1712/etc/bashrc && icoFoam -case {}'.format(
@@ -25,5 +26,18 @@ def getErrorOut(casepath):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT).stdout.decode('utf-8')
 
+    return(termout)
 
+listregex = re.compile(r'^\(\n(.*)\)$', re.MULTILINE|re.DOTALL)
+def parseErrorOut(termout):
+    """ Parse terminal output, return option list"""
+
+    output = listregex.search(termout).group(1).splitlines()
+    return(output)
+
+##################
+# TEST SECTION------
+
+termout = getErrorOut(casepath)
+output = parseErrorOut(termout)
 
