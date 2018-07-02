@@ -56,9 +56,29 @@ def getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue):
 
     return (parseErrorOut(getErrorOut(casepath)))
 
+def interpretFOAMdictionarypath(FOAMdictionarypath, casepath):
 
-# def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsDict):
+    if FOAMdictionarypath == 'fvSchemes':
+        FOAMdictionarypath = casepath / 'system/fvSchemes'
+    elif FOAMdictionarypath == 'fvSolution':
+        FOAMdictionarypath = casepath / 'system/fvSolution'
+    elif FOAMdictionarypath == 'controlDict':
+        FOAMdictionarypath = casepath / 'system/controlDict'
 
+def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList):
+
+
+    for Options in OptionsList:
+        if len(Options) == 2:
+            keypath, newvalue = Options
+            if len(keypath) > 1:
+                # Creates name with ':' between each sub-key
+                name = ":".join(keypath)
+            else:
+                name = keypath
+
+
+o
 
 ######################
 # TEST SECTION------
