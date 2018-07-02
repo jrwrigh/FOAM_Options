@@ -1,7 +1,9 @@
 import PyFoam
+
 import re
 import subprocess
 from pathlib import Path
+from functools import reduce
 
 #####################
 # Inputs------------
@@ -33,6 +35,14 @@ def parseErrorOut(termout):
 
     output = listregex.search(termout).group(1).splitlines()
     return (output)
+
+
+def changeDictionary(dictionary, path, newvalue):
+    """ Changes value of the given dictionary """
+    if not isinstance(path, str) and len(path) > 1:
+        reduce(dict.__getitem__, path[:-1], dictionary)[path[-1]] = newvalue
+    elif type(path) is str:
+        dictionary[path] = newvalue
 
 
 ##################
