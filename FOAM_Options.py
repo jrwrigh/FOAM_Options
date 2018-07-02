@@ -1,9 +1,9 @@
 import PyFoam
-
 import re
 import subprocess
 from pathlib import Path
 from functools import reduce
+import json
 
 #####################
 # Inputs------------
@@ -43,6 +43,15 @@ def changeDictionary(dictionary, path, newvalue):
         reduce(dict.__getitem__, path[:-1], dictionary)[path[-1]] = newvalue
     elif type(path) is str:
         dictionary[path] = newvalue
+
+
+def makeJSON(dictionary, filepath):
+    """ Save dictionary to JSON file"""
+    if not isinstance(filepath, Path):
+        filepath = Path(filepath)
+
+    with filepath.open('w') as jsonfile:
+        json.dump(dictionary, jsonfile)
 
 
 ##################
