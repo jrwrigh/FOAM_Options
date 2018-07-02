@@ -1,18 +1,11 @@
 import PyFoam
+from PyFoam.RunDictionary.ParsedParameterFile import ParsedParameterFile
 import re
 import subprocess
 from pathlib import Path
 from functools import reduce
 import json
 
-#####################
-# Inputs------------
-casepath = Path(
-    '~/OpenFOAM/u2berggeist-v1712/run/tutorials/incompressible/icoFoam/cavity/cavity'
-)
-
-# /Inputs-------------
-########################
 listregex = re.compile(r'^\(\n(.*)\)$', re.MULTILINE | re.DOTALL)
 
 
@@ -54,8 +47,46 @@ def makeJSON(dictionary, filepath):
         json.dump(dictionary, jsonfile)
 
 
-##################
+def getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue):
+
+    FOAMdictionary = ParsedParameterFile(
+        FOAMdictionarypath.expanduser().as_posix())
+    changeDictionary(FOAMdictionary.content, keypath, newvalue)
+    FOAMdictionary.writeFile()
+
+    return (parseErrorOut(getErrorOut(casepath)))
+
+
+# def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsDict):
+
+
+######################
 # TEST SECTION------
 
-termout = getErrorOut(casepath)
-output = parseErrorOut(termout)
+test = 'getFOAMOptions-external'
+
+if test == 'getFOAMOptions-internal':
+    casepath = Path(
+        '~/OpenFOAM/u2berggeist-v1712/run/tutorials/incompressible/icoFoam/cavity/cavity'
+    )
+    FOAMdictionarypath = casepath / 'system/fvSchemes'
+    keypath = 'ddtSchemes'
+    newvalue = {'default': 'EulerFOO'}
+
+    FOAMdictionary = ParsedParameterFile(
+        FOAMdictionarypath.expanduser().as_posix())
+    changeDictionary(FOAMdictionary.content, keypath, newvalue)
+    FOAMdictionary.writeFile()
+
+    termout = getErrorOut(casepath)
+    output = parseErrorOut(termout)
+
+elif test == 'getFOAMOptions-function':
+    casepath = Path(
+        '~/OpenFOAM/u2berggeist-v1712/run/tutorials/incompressible/icoFoam/cavity/cavity'
+    )
+    FOAMdictionarypath = casepath / 'system/fvSchemes'
+    keypath = 'ddtSchemes'
+    newvalue = {'default': 'EulerFOO'}
+
+    output = getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue)
