@@ -6,12 +6,9 @@ from pathlib import Path
 from functools import reduce
 import json
 import logging
-import warnings
 
 listregex = re.compile(r'^\(\n(.*)\)$', re.MULTILINE | re.DOTALL)
 
-logging.basicConfig(filename='FOAM_Options.log', level=logging.DEBUG)
-logging.captureWarnings(True)
 
 def getDictionaryValue(dictionary, path):
     """ Returns value of Dictionary at the specified path"""
@@ -32,7 +29,8 @@ def changeDictionary(dictionary, path, newvalue):
         reduce(dict.__getitem__, path[:-1], dictionary)[path[-1]] = newvalue
     elif type(path) is str:
         dictionary[path] = newvalue
-    logging.debug("changeDictionary outputed a new dictionary:\n{}".format(dictionary))
+    logging.debug(
+        "changeDictionary outputed a new dictionary:\n{}".format(dictionary))
 
 
 def getFOAMdictionary(FOAMdictionarypath, casepath=None):
@@ -80,10 +78,13 @@ def getErrorOut(casepath):
             format(casepath.as_posix())
         ],
         shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT).stdout.decode('utf-8')
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE).stderr.decode('utf-8')
 
     logging.debug("getErrorOut outputed:\n{}".format(termout))
+
+    if not termout:
+        logging.warning("The regex didn't have anything to parse")
 
     return (termout)
 
@@ -95,9 +96,7 @@ def parseErrorOut(termout):
         output = listregex.search(termout).group(1).splitlines()
         return (output)
     except:
-        warnings.warn('A change did not result in a failed CFD run')
-
-        logging.info("The regex didn't have anything to parse")
+        pass
 
 
 def getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue):
@@ -121,8 +120,13 @@ def getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue):
 
 def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList):
 
+    logging.info('Started Looping through FOAM Options.')
+    logging.info('Beginning parameters:')
+    logging.info('casepath: {}'.format(casepath))
+    logging.info('FOAMdictionarypath: {}'.format(FOAMdictionarypath))
     FOAMOptionsdict = {}
     for Options in OptionsList:
+        logging.info('Started working on OptionsList')
         if len(Options) == 2:
             keypath, newvalue = Options
             if len(keypath) > 1:
@@ -133,48 +137,9 @@ def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList):
 
         FOAMOptionsdict[name] = getFOAMOptions(casepath, FOAMdictionarypath,
                                                keypath, newvalue)
+        if FOAMOptionsdict[name] == None:
+            logging.warning('The following Options did not output a list:')
+            logging.warning('keypath: {}\nnewvalue: {}\nname: {}'.format(
+                keypath, newvalue, name))
 
     return FOAMOptionsdict
-
-
-######################
-# TEST SECTION------
-
-test = 'loopFOAMOptions-external'
-# test = 'getFOAMOptions-internal'
-
-if test == 'getFOAMOptions-internal':
-    casepath = Path(
-        '~/OpenFOAM/u2berggeist-v1712/run/tutorials/incompressible/icoFoam/cavity/cavity'
-    )
-    FOAMdictionarypath = casepath / 'system/fvSchemes'
-    keypath = ('ddtSchemes', 'default')
-    newvalue = 'EulerFOO'
-
-    FOAMdictionary = ParsedParameterFile(
-        FOAMdictionarypath.expanduser().as_posix())
-    changeDictionary(FOAMdictionary.content, keypath, newvalue)
-    FOAMdictionary.writeFile()
-
-    termout = getErrorOut(casepath)
-    output = parseErrorOut(termout)
-
-elif test == 'getFOAMOptions-function':
-    casepath = Path(
-        '~/OpenFOAM/u2berggeist-v1712/run/tutorials/incompressible/icoFoam/cavity/cavity'
-    )
-    FOAMdictionarypath = casepath / 'system/fvSchemes'
-    keypath = 'ddtSchemes'
-    newvalue = {'default': 'EulerFOO'}
-
-    output = getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue)
-
-elif test == 'loopFOAMOptions-external':
-    casepath = Path(
-        '~/OpenFOAM/u2berggeist-v1712/run/tutorials/incompressible/icoFoam/cavity/cavity'
-    )
-    FOAMdictionarypath = 'fvSchemes'
-
-    OptionsList = [(('ddtSchemes', 'default'), 'EulerFoo'),
-                   (('gradSchemes', 'default'), 'GaussFoo')]
-    loopoutput = loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList)
