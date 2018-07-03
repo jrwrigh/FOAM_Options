@@ -12,8 +12,7 @@ listregex = re.compile(r'^\(\n(.*)\)$', re.MULTILINE | re.DOTALL)
 
 def getDictionaryValue(dictionary, path):
     """ Returns value of Dictionary at the specified path"""
-    logging.debug("getDictionaryValue(dictionary, path):\n{}\n{}".format(
-        dictionary, path))
+    logging.debug(f"getDictionaryValue(dictionary={dictionary}, path={path})"
     if not isinstance(path, str) and len(path) > 1:
         return (reduce(dict.__getitem__, path, dictionary))
     elif type(path) is str:
@@ -23,14 +22,13 @@ def getDictionaryValue(dictionary, path):
 def changeDictionary(dictionary, path, newvalue):
     """ Changes value of the given dictionary """
     logging.debug(
-        "changeDictionary(dictionary, path, newvalue):\n{}\n{}\n{}".format(
-            dictionary, path, newvalue))
+        f"changeDictionary(dictionary={dictionary}, path={path}, newvalue={newvalue})"
+    )
     if not isinstance(path, str) and len(path) > 1:
         reduce(dict.__getitem__, path[:-1], dictionary)[path[-1]] = newvalue
     elif type(path) is str:
         dictionary[path] = newvalue
-    logging.debug(
-        "changeDictionary outputed a new dictionary:\n{}".format(dictionary))
+    logging.debug(f"changeDictionary outputed a new dictionary:\n{dictionary}")
 
 
 def getFOAMdictionary(FOAMdictionarypath, casepath=None):
@@ -43,8 +41,8 @@ def getFOAMdictionary(FOAMdictionarypath, casepath=None):
 def interpretFOAMdictionarypath(FOAMdictionarypath, casepath=None):
 
     logging.debug(
-        'interpretFOAMdictionarypath(FOAMdictionarypath, casepath=None):\n{}\n{}'.
-        format(FOAMdictionarypath, casepath))
+        f'interpretFOAMdictionarypath(FOAMdictionarypath={FOAMdictionarypath}, casepath={casepath})'
+    )
 
     if FOAMdictionarypath == 'fvSchemes':
         FOAMdictionarypath = casepath / 'system/fvSchemes'
@@ -54,8 +52,7 @@ def interpretFOAMdictionarypath(FOAMdictionarypath, casepath=None):
         FOAMdictionarypath = casepath / 'system/controlDict'
     elif isinstance(FOAMdictionarypath, str):
         FOAMdictionarypath = Path(FOAMdictionarypath)
-    logging.debug("interpretFOAMdictionarypath has outputed {}".format(
-        FOAMdictionarypath))
+    logging.debug(f"interpretFOAMdictionarypath has outputed {FOAMdictionarypath}")
 
     return FOAMdictionarypath
 
@@ -71,17 +68,16 @@ def makeJSON(dictionary, filepath):
 
 def getErrorOut(casepath):
     """ Get the STDERR from icoFoam """
-    logging.debug('getErrorOut(casepath):\n{}'.format(casepath))
+    logging.debug(f'getErrorOut(casepath={casepath})')
     termout = subprocess.run(
         [
-            '. ~/OpenFOAM/OpenFOAM-v1712/etc/bashrc && icoFoam -case {}'.
-            format(casepath.as_posix())
+            f'. ~/OpenFOAM/OpenFOAM-v1712/etc/bashrc && icoFoam -case {casepath.as_posix()}'
         ],
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE).stderr.decode('utf-8')
 
-    logging.debug("getErrorOut outputed:\n{}".format(termout))
+    logging.debug(f"getErrorOut outputed:\n{termout}")
 
     if not termout:
         logging.warning("The regex didn't have anything to parse")
@@ -94,9 +90,10 @@ def parseErrorOut(termout):
 
     try:
         output = listregex.search(termout).group(1).splitlines()
-        return (output)
     except:
         pass
+    else:
+        return (output)
 
 
 def getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue):
@@ -122,8 +119,8 @@ def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList):
 
     logging.info('Started Looping through FOAM Options.')
     logging.info('Beginning parameters:')
-    logging.info('casepath: {}'.format(casepath))
-    logging.info('FOAMdictionarypath: {}'.format(FOAMdictionarypath))
+    logging.info(f'casepath: {casepath}')
+    logging.info(f'FOAMdictionarypath: {FOAMdictionarypath}')
     FOAMOptionsdict = {}
     for Options in OptionsList:
         logging.info('Started working on OptionsList')
@@ -139,7 +136,7 @@ def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList):
                                                keypath, newvalue)
         if FOAMOptionsdict[name] == None:
             logging.warning('The following Options did not output a list:')
-            logging.warning('keypath: {}\nnewvalue: {}\nname: {}'.format(
-                keypath, newvalue, name))
+            logging.warning(
+                f'keypath: {keypath}\nnewvalue: {newvalue}\nname: {name}')
 
     return FOAMOptionsdict
