@@ -117,18 +117,18 @@ def getFOAMOptions(casepath, FOAMdictionarypath, keypath, newvalue):
     return output
 
 
-def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList):
+def loopFOAMOptions(casepath, FOAMdictionarypath, ChangesList):
 
     logger.info('Started Looping through FOAM Options.')
     logger.info('Beginning parameters:')
     logger.info(f'casepath: {casepath}')
     logger.info(f'FOAMdictionarypath: {FOAMdictionarypath}')
     FOAMOptionsdict = {}
-    logger.info('Started working on OptionsList')
-    for Options in OptionsList:
-        logger.info('Started working on next Option')
-        if len(Options) == 2:
-            keypath, newvalue = Options
+    logger.info('Started working on ChangesList')
+    for Change in ChangesList:
+        logger.info('Started working on next Change')
+        if len(Change) == 2:
+            keypath, newvalue = Change
             if len(keypath) > 1:
                 # Creates name with ':' between each sub-key
                 name = ":".join(keypath)
@@ -142,7 +142,7 @@ def loopFOAMOptions(casepath, FOAMdictionarypath, OptionsList):
                                                keypath, newvalue)
         if FOAMOptionsdict[name] == None:
             logger.warning(
-                'The following Options did not output a list:' +
+                'The following Change did not output a list:' +
                 f'\n\tkeypath: {keypath}\n\tnewvalue: {newvalue}\n\tname: {name}'
             )
         else:
